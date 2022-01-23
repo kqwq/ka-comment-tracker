@@ -4,7 +4,7 @@
   "description": "",
   "main": "crawl.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "crawl": "node crawl.js"
   },
   "type": "module",
   "keywords": [],

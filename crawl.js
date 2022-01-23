@@ -12,7 +12,7 @@ const db = new sqlite3.Database('./storage/all_posts.db', (err) => {
 });
 
 // Create the table
-db.run('CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY, parentId INTEGER, programId TEXT, type TEXT, content TEXT, authorKaid TEXT, date TEXT, answerCount INTEGER, replyCount INTEGER, upvotes INTEGER, lowQualityScore REAL, flags STRING, key TEXT)', (err) => {
+db.run('CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY, parentId INTEGER, programId TEXT, type TEXT, content TEXT, authorKaid TEXT, date DATETIME, answerCount INTEGER, replyCount INTEGER, upvotes INTEGER, lowQualityScore REAL, flags STRING, key TEXT)', (err) => {
   if (err) {
     return console.error(err.message);
   }
