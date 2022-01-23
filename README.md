@@ -1,18 +1,17 @@
 
-# a..
+### Build instructions
+`npm install`
+`npm run start`
 
 
-DB Schema
-
-comments
-- parentKey: string
-- key: string
-- program: string
+posts schema
+- parentId: string
+- id: string
+- programId: string
 - type: "question" | "answer" | "feedback" | "reply"
 - authorKaid: string
 - content: string
 - date: date
-
 - answerCount: int
 - replyCount: int
 - upvotes: int
