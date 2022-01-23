@@ -18,7 +18,7 @@ db.run('CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY, parentId INTEG
   }
   console.log('posts table created');
 });
-db.run('CREATE TABLE IF NOT EXISTS scratchpads (programId TEXT, dateRetrieved TEXT, title TEXT, datePublished TEXT, lastUpdated TEXT, type TEXT, codeLength INTEGER, authorKaid TEXT, votes INTEGER, spinoffs INTEGER, postCount INTEGER, questionCount INTEGER, answerCount INTEGER, commentCount INTEGER, replyCount INTEGER)', (err) => {
+db.run('CREATE TABLE IF NOT EXISTS scratchpads (programId TEXT, dateRetrieved DATETIME, title TEXT, datePublished DATETIME, lastUpdated DATETIME, type TEXT, codeLength INTEGER, authorKaid TEXT, votes INTEGER, spinoffs INTEGER, postCount INTEGER, questionCount INTEGER, answerCount INTEGER, commentCount INTEGER, replyCount INTEGER)', (err) => {
   if (err) {
     return console.error(err.message);
   }
