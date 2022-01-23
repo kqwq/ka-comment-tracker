@@ -22,6 +22,12 @@ async function fetchDiscussion(type, keyOrId) {
   return data
 }
 
+async function fetchScratchpad(id) {
+  let res = await fetch(`https://www.khanacademy.org/api/internal/scratchpads/${id}`)
+  let data = await res.json()
+  return data
+}
+
 /**
  * 
  * @param {*} page 
@@ -36,13 +42,13 @@ async function fetchToplist(page, cursor, sort) {
   return data
 }
 
-let globalCounter = 1
+let globalCounter =  1
 
 function addSchema(addToArray, item, programId, parentId) {
   let post = {
     parentId: parentId || 0,
     id: globalCounter++,
-    key: item.key,
+    key: item.type === "reply" ? "" : item.key,
     programId: programId,
     type: item.type,
     content: item.content,
@@ -111,4 +117,4 @@ async function getAllDiscussion(programId) {
 
 
 
-export { getAllDiscussion, fetchToplist };
+export { getAllDiscussion, fetchToplist, fetchScratchpad };

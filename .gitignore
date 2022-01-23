@@ -1,2 +1,4 @@
 node_modules
 storage/all_posts.db
+snapshots
+storage/all_posts.db.gz
