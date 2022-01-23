@@ -22,6 +22,7 @@ This program also stores all the scratchpads (projects), their stats, and number
 - upvotes: int
 - lowQualityScore: int
 - flags: string (comma-separated)
+- key: string
 
 
 ### scratchpads schema
