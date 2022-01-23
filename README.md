@@ -6,7 +6,7 @@ This program also stores all the scratchpads (projects), their stats, and number
 
 ### Build instructions
 `npm install`
-`npm run crawl` # This will crawl the KA top list and store the data in ./storage/all_posts.db
+`npm run crawl` # This will crawl the KA top list and store the data in ./storage/all_posts.db. Hit Ctrl+C to stop. I recommend running this in the background, expect it to break after ~24 hours.
 
 
 posts schema
