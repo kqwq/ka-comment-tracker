@@ -144,7 +144,7 @@ async function main(numberOfPrograms) {
         return;
       }
 
-      await sleep(1000); // wait 1 second to avoid rate limiting
+      // await sleep(4000); // wait 4 seconds to avoid rate limiting
     }
     cursor = topList.cursor;
     page++;
