@@ -1,5 +1,10 @@
-import { fetchScratchpad, fetchToplist, fetchDiscussion } from "./util/ka.js";
-
+import {
+  fetchScratchpad,
+  fetchToplist,
+  fetchQuestions,
+  getAllDiscussion,
+} from "./util/ka.js";
+import fs from "fs";
 const main = async () => {
   // let res = await fetchToplist();
   // console.log(res);
@@ -8,8 +13,14 @@ const main = async () => {
   // console.log(res);
 
   // questions
-  let res = await fetchDiscussion("questions", "1431776579");
-  console.log(res);
+  let posts = await getAllDiscussion("4788607474253824");
+  console.log("DONE!");
+
+  // Write to file
+  fs.appendFile("posts.txt", JSON.stringify(posts), (err) => {
+    if (err) throw err;
+    console.log("Posts written to file");
+  });
 };
 
 await main();

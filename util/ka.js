@@ -5,8 +5,8 @@ import {
   replyQuery,
   tipsThanksQuery,
 } from "./queries.js";
-
-let discussionApi = `https://www.khanacademy.org/api/internal/discussions`;
+import cliProgress from "cli-progress";
+import colors from "ansi-colors";
 
 const globalHeaders = {
   // cookie: "KAAS=Na7txrpU7VLU0GdMzLrpww",
@@ -14,7 +14,7 @@ const globalHeaders = {
   // "Referrer-Policy": "strict-origin-when-cross-origin",
 };
 
-async function fetchQuestions(programId) {
+async function fetchQuestions(programId, progressBar) {
   let questions = [];
   let res, json;
   let cursor = "";
@@ -28,17 +28,20 @@ async function fetchQuestions(programId) {
       }
     );
     json = await res.json();
-    questions = questions.concat(json.data.feedback.feedback);
+    if (json.data.feedback?.feedback?.length > 0) {
+      questions = questions.concat(json.data.feedback.feedback);
+      progressBar.setTotal(questions.length);
+    }
     if (json.data.feedback.isComplete) {
       break;
     } else {
       cursor = json.data.feedback.cursor;
     }
   }
-  return questions;
+  return questions || [];
 }
 
-async function fetchTipsThanks(programId) {
+async function fetchTipsThanks(programId, progressBar, lastTotal = 0) {
   let tipsThanks = [];
   let res, json;
   let cursor = "";
@@ -52,14 +55,17 @@ async function fetchTipsThanks(programId) {
       }
     );
     json = await res.json();
-    tipsThanks = tipsThanks.concat(json.data.feedback.feedback);
+    if (json.data.feedback?.feedback?.length > 0) {
+      tipsThanks = tipsThanks.concat(json.data.feedback.feedback);
+      progressBar.setTotal(lastTotal + tipsThanks.length);
+    }
     if (json.data.feedback.isComplete) {
       break;
     } else {
       cursor = json.data.feedback.cursor;
     }
   }
-  return tipsThanks;
+  return tipsThanks || [];
 }
 
 async function fetchAnswers(key) {
@@ -73,7 +79,7 @@ async function fetchAnswers(key) {
     }
   );
   let json = await res.json();
-  let answers = json.data.feedbackByKey.answers;
+  let answers = json.data.feedbackByKey.answers || [];
   return answers;
 }
 
@@ -89,7 +95,7 @@ async function fetchReplies(key) {
   );
   let json = await res.json();
   let replies = json.data.feedbackReplies;
-  return replies;
+  return replies || [];
 }
 
 /**
@@ -113,15 +119,6 @@ async function fetchDiscussion(discussionType, programId, cursorOrParentKey) {
   } else if (discussionType === "answers") {
   } else if (discussionType === "replies") {
   } else if (discussionType === "tips&thanks") {
-    // cursor
-    res = await fetch(
-      "https://www.khanacademy.org/api/internal/graphql/feedbackQuery",
-      {
-        headers: globalHeaders,
-        body: `{\"operationName\":\"feedbackQuery\",\"variables\":{\"topicId\":\"${programId}\",\"cursor\":\"${cursorOrParentKey}\",\"feedbackType\":\"COMMENT\",\"focusKind\":\"scratchpad\",\"currentSort\":1},\"query\":${tipsThanksQuery}}`,
-        method: "POST",
-      }
-    );
   }
 
   // Get JSON from response
@@ -183,6 +180,21 @@ async function fetchToplist(cursor) {
   return json.data.listTopPrograms;
 }
 
+async function fetchHotlist(cursor) {
+  if (!cursor) cursor = "";
+  let res = await fetch(
+    "https://www.khanacademy.org/api/internal/graphql/hotlist",
+    {
+      headers: globalHeaders,
+      body: `{\"operationName\":\"hotlist\",\"query\":\"query hotlist($curationNodeId: String, $onlyOfficialProjectSpinoffs: Boolean!, $sort: ListProgramSortOrder, $pageInfo: ListProgramsPageInfo) {\\n  listTopPrograms(curationNodeId: $curationNodeId, onlyOfficialProjectSpinoffs: $onlyOfficialProjectSpinoffs, sort: $sort, pageInfo: $pageInfo) {\\n    complete\\n    cursor\\n    programs {\\n      id\\n      key\\n      authorKaid\\n      authorNickname\\n      displayableSpinoffCount\\n      imagePath\\n      sumVotesIncremented\\n      translatedTitle: title\\n      url\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n\",\"variables\":{\"curationNodeId\":\"xffde7c31\",\"onlyOfficialProjectSpinoffs\":false,\"sort\":\"HOT\",\"pageInfo\":{\"itemsPerPage\":30,\"cursor\":\"${cursor}\"}}}`,
+      method: "POST",
+    }
+  );
+
+  let json = await res.json();
+  return json.data.listTopPrograms;
+}
+
 let globalCounter = 1;
 
 function addSchema(addToArray, item, programId, parentId) {
@@ -200,60 +212,86 @@ function addSchema(addToArray, item, programId, parentId) {
     replyCount: item.replyCount,
     upvotes: item.sumVotesIncremented,
     lowQualityScore: item.lowQualityScore,
-    flags: item.flags.join(","),
+    flags: item?.flags?.join(","),
   };
   addToArray.push(post);
 }
 
 async function getAllDiscussion(programId) {
+  const bar1 = new cliProgress.SingleBar({
+    format:
+      programId.padStart(16, " ") +
+      " |" +
+      colors.cyan("{bar}") +
+      "| {percentage}% || {value}/{total} top-level posts",
+    barCompleteChar: "\u2588",
+    barIncompleteChar: "\u2591",
+    // hideCursor: true
+  });
   let all = [];
-  let questions = await fetchDiscussion("questions", programId);
+
+  bar1.start(0, 0);
+  let questions = await fetchQuestions(programId, bar1);
+  let comments = await fetchTipsThanks(programId, bar1, questions.length);
+
   let ind = 0;
-  for (let question of questions.feedback) {
-    let questionCounter = globalCounter;
-    addSchema(all, question, programId);
+  for (let question of questions) {
+    let questionSqlId = globalCounter;
+    addSchema(all, question, programId); // Add question
+
+    if (!question?.answers) {
+      question.answers = [];
+    } else if (question.answers.length < question.answerCount) {
+      // If not all answers are shown, fetch them
+      question.answers = await fetchAnswers(question.key);
+    }
+
     for (let answer of question.answers) {
-      let answerCounter = globalCounter;
-      addSchema(all, answer, programId, questionCounter);
+      let answerSqlId = globalCounter;
+      addSchema(all, answer, programId, questionSqlId); // Add answer
       if (answer.replyCount > 0) {
-        let replies = await fetchDiscussion("replies", answer.key);
+        let replies = await fetchReplies(answer.key);
         for (let reply of replies) {
-          addSchema(all, reply, programId, answerCounter);
+          addSchema(all, reply, programId, answerSqlId);
         }
       }
     }
     if (question.replyCount > 0) {
-      let replies = await fetchDiscussion("replies", question.key);
+      let replies = await fetchReplies(question.key);
       for (let reply of replies) {
-        addSchema(all, reply, programId, questionCounter);
+        addSchema(all, reply, programId, questionSqlId);
       }
     }
 
     ind++;
-    console.log(
-      `Program:${programId} ${ind}/${questions.feedback.length} questions done`
-    );
+    bar1.update(ind);
   }
-
-  let comments = await fetchDiscussion("tips&thanks", programId);
-  ind = 0;
-  for (let comment of comments.feedback) {
-    let commentCounter = globalCounter;
+  for (let comment of comments) {
+    let commentSqlId = globalCounter;
     addSchema(all, comment, programId);
     if (comment.replyCount > 0) {
-      let replies = await fetchDiscussion("replies", comment.key);
+      let replies = await fetchReplies(comment.key);
       for (let reply of replies) {
-        addSchema(all, reply, programId, commentCounter);
+        addSchema(all, reply, programId, commentSqlId);
       }
     }
 
     ind++;
-    console.log(
-      `Program:${programId} ${ind}/${comments.feedback.length} comments done`
-    );
+    bar1.update(ind);
   }
+
+  bar1.stop();
 
   return all;
 }
 
-export { getAllDiscussion, fetchToplist, fetchScratchpad, fetchDiscussion };
+export {
+  getAllDiscussion,
+  fetchToplist,
+  fetchScratchpad,
+  fetchQuestions,
+  fetchAnswers,
+  fetchReplies,
+  fetchTipsThanks,
+  fetchHotlist,
+};
