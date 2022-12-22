@@ -4,13 +4,15 @@
   "description": "",
   "main": "crawl.js",
   "scripts": {
-    "crawl": "node crawl.js"
+    "start": "node crawl.js"
   },
   "type": "module",
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "ansi-colors": "^4.1.3",
+    "cli-progress": "^3.11.2",
     "node-fetch": "^3.2.0",
     "sqlite3": "^5.0.2"
   }
