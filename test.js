@@ -1,3 +1,5 @@
+// Testing code for mitagating to the new GraphQL API
+
 import {
   fetchScratchpad,
   fetchToplist,

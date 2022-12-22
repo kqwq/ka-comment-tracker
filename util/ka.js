@@ -197,22 +197,22 @@ async function fetchHotlist(cursor) {
 
 let globalCounter = 1;
 
-function addSchema(addToArray, item, programId, parentId) {
+function addSchema(addToArray, item, typeOverride, programId, parentId) {
   let post = {
     parentId: parentId || 0,
     id: globalCounter++,
     key: item.type === "reply" ? "" : item.key,
     programId: programId,
-    type: item.type,
+    type: typeOverride,
     content: item.content,
-    authorKaid: item.authorKaid,
+    authorKaid: item.author.id,
     date: item.date,
 
-    answerCount: item.answerCount,
+    answerCount: item.answerCount || 0,
     replyCount: item.replyCount,
     upvotes: item.sumVotesIncremented,
     lowQualityScore: item.lowQualityScore,
-    flags: item?.flags?.join(","),
+    flags: item?.flags?.join(",") || [],
   };
   addToArray.push(post);
 }
@@ -220,8 +220,7 @@ function addSchema(addToArray, item, programId, parentId) {
 async function getAllDiscussion(programId) {
   const bar1 = new cliProgress.SingleBar({
     format:
-      programId.padStart(16, " ") +
-      " |" +
+      "     |" +
       colors.cyan("{bar}") +
       "| {percentage}% || {value}/{total} top-level posts",
     barCompleteChar: "\u2588",
@@ -237,7 +236,7 @@ async function getAllDiscussion(programId) {
   let ind = 0;
   for (let question of questions) {
     let questionSqlId = globalCounter;
-    addSchema(all, question, programId); // Add question
+    addSchema(all, question, "question", programId); // Add question
 
     if (!question?.answers) {
       question.answers = [];
@@ -248,18 +247,18 @@ async function getAllDiscussion(programId) {
 
     for (let answer of question.answers) {
       let answerSqlId = globalCounter;
-      addSchema(all, answer, programId, questionSqlId); // Add answer
+      addSchema(all, answer, "answer", programId, questionSqlId); // Add answer
       if (answer.replyCount > 0) {
         let replies = await fetchReplies(answer.key);
         for (let reply of replies) {
-          addSchema(all, reply, programId, answerSqlId);
+          addSchema(all, reply, "reply", programId, answerSqlId);
         }
       }
     }
     if (question.replyCount > 0) {
       let replies = await fetchReplies(question.key);
       for (let reply of replies) {
-        addSchema(all, reply, programId, questionSqlId);
+        addSchema(all, reply, "reply", programId, questionSqlId);
       }
     }
 
@@ -268,11 +267,11 @@ async function getAllDiscussion(programId) {
   }
   for (let comment of comments) {
     let commentSqlId = globalCounter;
-    addSchema(all, comment, programId);
+    addSchema(all, comment, "comment", programId);
     if (comment.replyCount > 0) {
       let replies = await fetchReplies(comment.key);
       for (let reply of replies) {
-        addSchema(all, reply, programId, commentSqlId);
+        addSchema(all, reply, "reply", programId, commentSqlId);
       }
     }
 

@@ -8,8 +8,13 @@ import {
   fetchHotlist,
 } from "./util/ka.js";
 
+const sleep = (milliseconds) => {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+};
+
 // Check if the database exists, if not create it
-const db = new sqlite3.Database("./storage/all_posts.db", (err) => {
+const uniqueDatetime = new Date().toISOString().replace(/:/g, "-");
+const db = new sqlite3.Database(`./storage/${uniqueDatetime}.db`, (err) => {
   if (err) {
     return console.error(err.message);
   }
@@ -80,7 +85,7 @@ async function storeDiscussionPosts(pad, posts) {
       dateRetrieved,
       pad.title,
       pad.created,
-      pad.date,
+      pad.revision.created,
       pad.userAuthoredContentType,
       pad.revision.code.length,
       pad.kaid,
@@ -107,7 +112,7 @@ async function main(numberOfPrograms) {
   let scratchpadN = 1;
   let breakNow = false;
   while (!breakNow) {
-    let topList = await fetchHotlist(cursor);
+    let topList = await fetchToplist(cursor); // change to fetchHotlist to get hotlist instead
     for (let scratchpad of topList.programs) {
       let programId = scratchpad.url.slice(scratchpad.url.lastIndexOf("/") + 1);
 
@@ -118,7 +123,6 @@ async function main(numberOfPrograms) {
           ` #${scratchpadN} https://www.khanacademy.org/cs/c/${programId}`
         );
         console.log(`     ${fullScratchpad?.title}`);
-        console.log(`========================================`);
         lastProgramId = fullScratchpad.id.toString();
         let posts = await getAllDiscussion(programId);
         await storeDiscussionPosts(fullScratchpad, posts);
