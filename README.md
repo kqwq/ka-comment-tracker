@@ -1,19 +1,23 @@
 ## KA Comment Tracker
-This program stores all of the comments posted on the KA website, starting with the most voted programs and working down. All the data is stored to a SQLite database under ./storage/all_posts.db
+_This program has been updated to work with the new GraphQL API._
+
+This program saves all of the comments posted on the KA website, starting with the most voted programs on the Top List and working down. It is saved as a SQLite database at `./storage/{current-date}.db`.
 
 This program also stores all the scratchpads (projects), their stats, and number of questions/answers/comments/replies. 
 
 
 ### Build instructions
-`yarn install`
-`yarn start` # This will crawl the KA top list and store the data in ./storage/all_posts.db. Hit Ctrl+C to stop. I recommend running this in the background, expect it to break after ~24 hours.
+```yarn install```
+```yarn start```
+
+- This will crawl the KA top list and store the data in ./storage/{current-date}.db. Hit Ctrl+C to stop. I recommend running this in the background, it will scrape forever until you stop it.
 
 
 ### posts schema
 - parentId: string
 - id: string
 - programId: string
-- type: "question" | "answer" | "feedback" | "reply"
+- type: "question" | "answer" | "comment" | "reply"
 - authorKaid: string
 - content: string
 - date: date
@@ -21,7 +25,7 @@ This program also stores all the scratchpads (projects), their stats, and number
 - replyCount: int
 - upvotes: int
 - lowQualityScore: int
-- flags: string (comma-separated)
+- flags: string (comma-separated) (no longer works since GraphQL update)
 - key: string
 
 

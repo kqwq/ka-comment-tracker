@@ -212,7 +212,7 @@ function addSchema(addToArray, item, typeOverride, programId, parentId) {
     replyCount: item.replyCount,
     upvotes: item.sumVotesIncremented,
     lowQualityScore: item.lowQualityScore,
-    flags: item?.flags?.join(",") || [],
+    flags: item?.flags?.join(",") || "",
   };
   addToArray.push(post);
 }
