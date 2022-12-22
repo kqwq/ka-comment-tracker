@@ -63,7 +63,7 @@ async function storeDiscussionPosts(pad, posts) {
         item.upvotes,
         item.lowQualityScore,
         item.flags,
-        item.key,
+        item.expandKey, // NOT item.key! Had to restart a process that had been running for 19 hours because of this mistake.
       ],
       (err) => {
         if (err) {
@@ -128,10 +128,14 @@ async function main(numberOfPrograms) {
         await storeDiscussionPosts(fullScratchpad, posts);
       } catch (e) {
         // Write error to file
-        fs.appendFile("error.txt", `${e}\n`, (err) => {
-          if (err) throw err;
-          console.log("Error written to file");
-        });
+        fs.appendFile(
+          "error.txt",
+          `${e} | skipping program ${programId}  \n`,
+          (err) => {
+            if (err) throw err;
+            console.log("Error writting to file");
+          }
+        );
         console.log(`=== ERROR: ${e}, skipping program ${programId} ===`);
       }
       scratchpadN++;
@@ -139,6 +143,8 @@ async function main(numberOfPrograms) {
         breakNow = true;
         return;
       }
+
+      await sleep(1000); // wait 1 second to avoid rate limiting
     }
     cursor = topList.cursor;
     page++;
