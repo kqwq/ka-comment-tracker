@@ -201,7 +201,8 @@ function addSchema(addToArray, item, typeOverride, programId, parentId) {
   let post = {
     parentId: parentId || 0,
     id: globalCounter++,
-    key: item.type === "reply" ? "" : item.key,
+    key: typeOverride === "reply" ? "" : item.key,
+    expandKey: item.expandKey,
     programId: programId,
     type: typeOverride,
     content: item.content,
@@ -212,7 +213,7 @@ function addSchema(addToArray, item, typeOverride, programId, parentId) {
     replyCount: item.replyCount,
     upvotes: item.sumVotesIncremented,
     lowQualityScore: item.lowQualityScore,
-    flags: item?.flags?.join(",") || "",
+    // flags: item?.flags?.join(",") || "",
   };
   addToArray.push(post);
 }

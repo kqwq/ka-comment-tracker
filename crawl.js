@@ -23,7 +23,7 @@ const db = new sqlite3.Database(`./storage/${uniqueDatetime}.db`, (err) => {
 
 // Create the table
 db.run(
-  "CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY, parentId INTEGER, programId TEXT, type TEXT, content TEXT, authorKaid TEXT, date DATETIME, answerCount INTEGER, replyCount INTEGER, upvotes INTEGER, lowQualityScore REAL, flags STRING, key TEXT)",
+  "CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY, parentId INTEGER, programId TEXT, type TEXT, content TEXT, authorKaid TEXT, date DATETIME, answerCount INTEGER, replyCount INTEGER, upvotes INTEGER, lowQualityScore REAL, key TEXT, expandKey TEXT)",
   (err) => {
     if (err) {
       return console.error(err.message);
@@ -49,7 +49,7 @@ async function storeDiscussionPosts(pad, posts) {
   console.log(`Program:${pad.id} Saving ${posts.length} discussion posts`);
   for (let item of posts) {
     await db.run(
-      "INSERT INTO posts (id, parentId, programId, type, content, authorKaid, date, answerCount, replyCount, upvotes, lowQualityScore, flags, key) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO posts (id, parentId, programId, type, content, authorKaid, date, answerCount, replyCount, upvotes, lowQualityScore, key, expandKey) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
         item.id,
         item.parentId,
@@ -62,7 +62,7 @@ async function storeDiscussionPosts(pad, posts) {
         item.replyCount,
         item.upvotes,
         item.lowQualityScore,
-        item.flags,
+        item.key, // NEED BOTH
         item.expandKey, // NOT item.key! Had to restart a process that had been running for 19 hours because of this mistake.
       ],
       (err) => {
@@ -112,7 +112,7 @@ async function main(numberOfPrograms) {
   let scratchpadN = 1;
   let breakNow = false;
   while (!breakNow) {
-    let topList = await fetchToplist(cursor); // change to fetchHotlist to get hotlist instead
+    let topList = await fetchHotlist(cursor); // change to fetchHotlist to get hotlist instead
     for (let scratchpad of topList.programs) {
       let programId = scratchpad.url.slice(scratchpad.url.lastIndexOf("/") + 1);
 
