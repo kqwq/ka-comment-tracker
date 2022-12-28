@@ -195,7 +195,7 @@ async function fetchHotlist(cursor) {
   return json.data.listTopPrograms;
 }
 
-let globalCounter = 1;
+let globalCounter = 2198831 + 1;
 
 function addSchema(addToArray, item, typeOverride, programId, parentId) {
   let post = {
@@ -219,10 +219,31 @@ function addSchema(addToArray, item, typeOverride, programId, parentId) {
 }
 
 async function getAllDiscussion(programId) {
+  let ansiColorChoices = [
+    "red",
+    "green",
+    "yellow",
+    "blue",
+    "magenta",
+    "cyan",
+    "redBright",
+    "greenBright",
+    "yellowBright",
+    "blueBright",
+    "magentaBright",
+    "cyanBright",
+  ];
+  // Choose a color based on the hour of the day
+  let color = ansiColorChoices[new Date().getHours() % ansiColorChoices.length];
+  if (programId.toString().length < 16) {
+    // If old program ID, use gray
+    color = "gray";
+  }
+
   const bar1 = new cliProgress.SingleBar({
     format:
       "     |" +
-      colors.cyan("{bar}") +
+      colors[color]("{bar}") +
       "| {percentage}% || {value}/{total} top-level posts",
     barCompleteChar: "\u2588",
     barIncompleteChar: "\u2591",

@@ -13,7 +13,7 @@ const sleep = (milliseconds) => {
 };
 
 // Check if the database exists, if not create it
-const uniqueDatetime = new Date().toISOString().replace(/:/g, "-");
+const uniqueDatetime = "large_sized"; // new Date().toISOString().replace(/:/g, "-");
 const db = new sqlite3.Database(`./storage/${uniqueDatetime}.db`, (err) => {
   if (err) {
     return console.error(err.message);
@@ -46,7 +46,7 @@ async function storeDiscussionPosts(pad, posts) {
   if (posts.length == 0) {
     return;
   }
-  console.log(`Program:${pad.id} Saving ${posts.length} discussion posts`);
+  console.log(`     Program:${pad.id} Saving ${posts.length} discussion posts`);
   for (let item of posts) {
     await db.run(
       "INSERT INTO posts (id, parentId, programId, type, content, authorKaid, date, answerCount, replyCount, upvotes, lowQualityScore, key, expandKey) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -107,14 +107,29 @@ async function storeDiscussionPosts(pad, posts) {
 
 async function main(numberOfPrograms) {
   let page = 0;
-  let cursor = "";
+  let cursor =
+    "Cj4KDQoHdXB2b3RlcxICCAUSKWoOc35raGFuLWFjYWRlbXlyFwsSClNjcmF0Y2hwYWQYgICd7pPt7QgMGAAgAQ";
   let lastProgramId = "";
-  let scratchpadN = 1;
+  let scratchpadN = 82231 + 1;
+
+  let skipList = [
+    "4990596228268032",
+    "4990256584196096",
+    "4990243746299904",
+    "4990002723028992",
+  ];
+
   let breakNow = false;
   while (!breakNow) {
-    let topList = await fetchHotlist(cursor); // change to fetchHotlist to get hotlist instead
+    let topList = await fetchToplist(cursor); // change to fetchHotlist to get hotlist instead
     for (let scratchpad of topList.programs) {
       let programId = scratchpad.url.slice(scratchpad.url.lastIndexOf("/") + 1);
+
+      // If program is in skip list, skip it and console log which one
+      if (skipList.includes(programId)) {
+        console.log(`=== Skipping ${programId} ===`);
+        continue;
+      }
 
       try {
         let fullScratchpad = await fetchScratchpad(programId);
@@ -165,7 +180,7 @@ async function main(numberOfPrograms) {
   // close the database connection
   setTimeout(closeDb, 5);
 }
-main(10000 * 500);
+main(1000 * 1000 * 10);
 
 function closeDb() {
   db.close((err) => {
